@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Spring SSE Demo</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <h1>Server-Sent Events (SSE) with Spring</h1>
+    <h2>Order Status: <span id="orderStatus"></span></h2>
+    <button onclick="updateOrderStatus()">Update Status</button>
+    <div id="events"></div>
+    <hr>
+    <div id="error-div"></div>
+    <hr>
+    <button id="COrderBtn">Create Order</button>
+    <span>tete</span>
+    <div id="update-list"></div>
+    <span>dede</span>
+    <div id="list"></div>
+
+    <script>
+        const eventSourceO = new EventSource("http://localhost:8080/api/v1/status/sse");
+        eventSourceO.onmessage = function (event) {
+            document.getElementById("orderStatus").innerText = event.data;
+        };
+        function updateOrderStatus() {
+            // fetch('/orders/update', { method: 'GET' })
+            //     .then(response => response.text())
+            //     .then(message => alert(message));
+            var settings = {
+                "url": "http://localhost:8080/api/v1/update",
+                "method": "POST",
+                "timeout": 0,
+                "headers": {
+                    "Content-Type": "text/plain"
+                },
+                "data": "Order Created 5",
+            };
+
+            $.ajax(settings).done(function (response) {
+                console.log(response);
+            });
+        }
+
+        $("#COrderBtn").click(function () {
+            var settings = {
+                "url": "http://localhost:8080/api/v1/CreateOrder",
+                "method": "POST",
+                "timeout": 0,
+                "headers": {
+                    "Content-Type": "text/plain"
+                },
+                "data": "Order Created",
+            };
+
+            $.ajax(settings).done(function (response) {
+                console.log(response);
+            });
+        });
+        
+
+        const eventSource = new EventSource("http://localhost:8080/api/v1/stream-sse2");
+        eventSource.onmessage = (event) => {
+            const div = document.createElement("div");
+            div.textContent = `Event received: ${event.data}`;
+            document.getElementById("events").appendChild(div);
+        };
+
+        eventSource.addEventListener("periodic-event", (event) => {
+            const newElement = document.createElement("li");
+            const eventList = document.getElementById("list");
+            //const time = JSON.parse(event.data).time;
+            newElement.textContent = `ping at ${event.data}`;
+            eventList.appendChild(newElement);
+        });
+
+        eventSource.addEventListener("orderUp", (event) => {
+            const newElement = document.createElement("li");
+            const eventList = document.getElementById("update-list");
+            //const time = JSON.parse(event.data).time;
+            newElement.textContent = `ping at ${event.data}`;
+            eventList.appendChild(newElement);
+        });
+
+        eventSource.onerror = (error) => {
+            const div = document.createElement("div");
+            div.textContent = `Event received: ${error}`;
+            document.getElementById("error-div").appendChild(div);
+            console.error("Error occurred:", error);
+            eventSource.close();
+        };
+
+
+    </script>
+</body>
+
+</html>
